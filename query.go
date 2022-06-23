@@ -4,7 +4,11 @@ type DBQuery interface {
 	ExecuteQuery(query string, response *interface{}) error
 	FindAllBy(tableName string, condition DBCondition, response *interface{}) error
 	FindByConditions(tableName string, conditions []DBCondition, response *interface{}) error
+<<<<<<< HEAD
 	FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{}) error
+=======
+	FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{})
+>>>>>>> 6bb88ef53f641b5d26df89f10cc0f97aeb5f422f
 	ExistsBy(tableName string, condition DBCondition, response *bool) error
 	InsertInto(tableName string, columnValues []DBValue, response *interface{}) error
 	Update(tableName string, columnValues []DBValue, conditions []DBCondition, response *interface{}) error
