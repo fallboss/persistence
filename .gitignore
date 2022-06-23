@@ -1,0 +1,13 @@
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+*.out
+*.html
+### Example user template template
+### Example user template
