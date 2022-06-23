@@ -13,7 +13,7 @@ type pgRepo struct {
 	cnt *PgClient
 }
 
-func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{}) error {
+func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response interface{}) error {
 	var conditionsQuery = ""
 	for _, condition := range conditions {
 		if !strings.EqualFold(conditionsQuery, "") {
@@ -33,12 +33,12 @@ func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, con
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) ExecuteQuery(query string, response *interface{}) error {
+func (r *pgRepo) ExecuteQuery(query string, response interface{}) error {
 	row := r.cnt.RunQueryRow(query)
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response *interface{}) error {
+func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response interface{}) error {
 	op, err := parseOperator(condition.Operator)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response *in
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, response *interface{}) error {
+func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, response interface{}) error {
 	var conditionsQuery = ""
 	for _, condition := range conditions {
 		if !strings.EqualFold(conditionsQuery, "") {
@@ -71,7 +71,7 @@ func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, re
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response *bool) error {
+func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response bool) error {
 	op, err := parseOperator(condition.Operator)
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response *boo
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response *interface{}) error {
+func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response interface{}) error {
 	var columnNames []string
 	var values []interface{}
 	for _, column := range columnValues {
@@ -100,7 +100,7 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response *
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition, response *interface{}) error {
+func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition, response interface{}) error {
 	var columnQuery = ""
 	for _, column := range columnValues {
 		if !strings.EqualFold(columnQuery, "") {
