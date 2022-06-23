@@ -10,12 +10,7 @@ type datastoreRepo struct {
 	cnt *DSClient
 }
 
-<<<<<<< HEAD
 func (r *datastoreRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{}) error {
-=======
-func (r *datastoreRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{}) {
->>>>>>> 6bb88ef53f641b5d26df89f10cc0f97aeb5f422f
-	//TODO implement me
 	panic("implement me")
 }
 
