@@ -51,6 +51,26 @@ func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, re
 	return (*row).Scan(&response)
 }
 
+func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{}) error {
+	var conditionsQuery = ""
+	for _, condition := range conditions {
+		if !strings.EqualFold(conditionsQuery, "") {
+			conditionsQuery = conditionsQuery + " AND "
+		}
+		op, err := parseOperator(condition.Operator)
+		if err != nil {
+			return err
+		}
+		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%s')", condition.FieldName, op, condition.Value)
+	}
+	var query = fmt.Sprintf("SELECT %s FROM %s WHERE %s", strings.Join(columns, ","), tableName, conditionsQuery)
+	row, err := r.cnt.RunQueryRows(query)
+	if err != nil {
+		return err
+	}
+	return (*row).Scan(&response)
+}
+
 func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response *bool) error {
 	op, err := parseOperator(condition.Operator)
 	if err != nil {
