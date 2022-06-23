@@ -60,8 +60,8 @@ func verifyPgProp(pgProp *PostgresProp) {
 		log.Fatal("DB_NAME not found")
 	}
 	v := pgProp.DbSslMode
-	if len(v) > 0 && (!strings.EqualFold(v, "disable") || !strings.EqualFold(v, "require") ||
-		!strings.EqualFold(v, "verify-ca") || !strings.EqualFold(v, "verify-full")) {
+	if len(v) > 0 && (!strings.EqualFold(v, "disable") && !strings.EqualFold(v, "require") &&
+		!strings.EqualFold(v, "verify-ca") && !strings.EqualFold(v, "verify-full")) {
 		log.Fatalf("DB_SSL_MODE invalid value: %s", v)
 	} else if len(v) == 0 {
 		pgProp.DbSslMode = "require"
