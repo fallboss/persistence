@@ -13,6 +13,26 @@ type pgRepo struct {
 	cnt *PgClient
 }
 
+func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response *interface{}) error {
+	var conditionsQuery = ""
+	for _, condition := range conditions {
+		if !strings.EqualFold(conditionsQuery, "") {
+			conditionsQuery = conditionsQuery + " AND "
+		}
+		op, err := parseOperator(condition.Operator)
+		if err != nil {
+			return err
+		}
+		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%s')", condition.FieldName, op, condition.Value)
+	}
+	var query = fmt.Sprintf("SELECT %s FROM %s WHERE %s", strings.Join(columns, ","), tableName, conditionsQuery)
+	row, err := r.cnt.RunQueryRows(query)
+	if err != nil {
+		return err
+	}
+	return (*row).Scan(&response)
+}
+
 func (r *pgRepo) ExecuteQuery(query string, response *interface{}) error {
 	row := r.cnt.RunQueryRow(query)
 	return (*row).Scan(&response)
