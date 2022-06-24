@@ -79,7 +79,7 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response inte
 	if err != nil {
 		return err
 	}
-	var query = fmt.Sprintf("SELECT 1 Exists %s WHERE %s %s '%s'", tableName, condition.FieldName, op, condition.Value)
+	var query = fmt.Sprintf("SELECT 1 CANT FROM %s WHERE %s %s '%s'", tableName, condition.FieldName, op, condition.Value)
 	//query = fmt.Sprintf("SELECT exists (%s)", query)
 	return r.cnt.RunQueryRow(query).Scan(&response)
 }
