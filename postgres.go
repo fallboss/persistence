@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"github.com/fallboss/persistence/formatter"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
@@ -23,6 +24,7 @@ func GetPostgresClient(ctx context.Context, pgProp *PostgresProp) *PgClient {
 	)
 
 	cnxCfg, err := pgxpool.ParseConfig(urlCnx)
+	cnxCfg.ConnConfig.RuntimeParams["timezone"] = formatter.GetTimeZone(pgProp.Country)
 	if err != nil {
 		log.Fatalf("Error creating pool config: %v\n", err)
 	}

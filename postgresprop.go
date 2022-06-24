@@ -12,4 +12,5 @@ type PostgresProp struct {
 	DbSelectLimit    int
 	DbMaxCnx         int
 	DbWaitAfterQuery time.Duration
+	Country          string
 }
