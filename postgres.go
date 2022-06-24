@@ -25,10 +25,10 @@ func GetPostgresClient(ctx context.Context, pgProp *PostgresProp) *PgClient {
 	//)
 
 	cnxCfg, err := pgxpool.ParseConfig(urlCnx)
-	cnxCfg.ConnConfig.RuntimeParams["timezone"] = formatter.GetTimeZone(pgProp.Country)
 	if err != nil {
 		log.Fatalf("Error creating pool config: %v\n", err)
 	}
+	cnxCfg.ConnConfig.RuntimeParams["timezone"] = formatter.GetTimeZone(pgProp.Country)
 	var maxCnx = 30
 	if pgProp.DbMaxCnx > 0 {
 		maxCnx = pgProp.DbMaxCnx
