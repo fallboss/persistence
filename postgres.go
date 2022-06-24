@@ -18,12 +18,6 @@ func GetPostgresClient(ctx context.Context, pgProp *PostgresProp) *PgClient {
 
 	urlCnx := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", pgProp.DbUser, pgProp.DbPassword, pgProp.DbHost, pgProp.DbPort, pgProp.DbName)
 
-	//urlCnx := fmt.Sprintf(
-	//	ulrConnectionString, url.QueryEscape(pgProp.DbUser), url.QueryEscape(pgProp.DbPassword),
-	//	url.QueryEscape(pgProp.DbHost), url.QueryEscape(pgProp.DbPort), url.QueryEscape(pgProp.DbName),
-	//	url.QueryEscape(pgProp.DbSslMode),
-	//)
-
 	cnxCfg, err := pgxpool.ParseConfig(urlCnx)
 	if err != nil {
 		log.Fatalf("Error creating pool config: %v\n", err)

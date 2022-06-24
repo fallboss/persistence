@@ -5,7 +5,7 @@ type DBQuery interface {
 	FindAllBy(tableName string, condition DBCondition, response interface{}) error
 	FindByConditions(tableName string, conditions []DBCondition, response interface{}) error
 	FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response interface{}) error
-	ExistsBy(tableName string, condition DBCondition, response bool) error
+	ExistsBy(tableName string, condition DBCondition, response interface{}) error
 	InsertInto(tableName string, columnValues []DBValue, response interface{}) error
 	Update(tableName string, columnValues []DBValue, conditions []DBCondition, response interface{}) error
 }

@@ -74,7 +74,7 @@ func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, re
 	return (*row).Scan(&response)
 }
 
-func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response bool) error {
+func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response interface{}) error {
 	op, err := parseOperator(condition.Operator)
 	if err != nil {
 		return err
@@ -92,8 +92,8 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response i
 		values = append(values, column.Value)
 	}
 	var query = fmt.Sprintf("INSERT INTO %s (%s) VALUES", tableName, strings.Join(columnNames, ","))
-	var queryValues = query + " (%d) RETURNING *"
-	row, err := r.cnt.RunQueryArgs(queryValues, values)
+	//var queryValues = query + " (%s) RETURNING *"
+	row, err := r.cnt.RunQueryArgs(query, values)
 	if err != nil {
 		return err
 	}
