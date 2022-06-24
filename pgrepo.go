@@ -79,9 +79,9 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response inte
 	if err != nil {
 		return err
 	}
-	var query = fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM %s WHERE %s %s '%s')", tableName, condition.FieldName, op, condition.Value)
-	row := r.cnt.RunQueryRow(query)
-	return (*row).Scan(&response)
+	var query = fmt.Sprintf("SELECT 1 FROM %s WHERE %s %s '%s'", tableName, condition.FieldName, op, condition.Value)
+	query = fmt.Sprintf("SELECT exists (%s)", query)
+	return r.cnt.RunQueryRow(query).Scan(&response)
 }
 
 func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response interface{}) error {
@@ -120,8 +120,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s %s", condition.FieldName, op, condition.Value)
 	}
 	var query = fmt.Sprintf("UPDATE %s SET %s WHERE %s ", tableName, columnQuery, conditionsQuery)
-	row := r.cnt.RunQueryRow(query)
-	return (*row).Scan(&response)
+	return r.cnt.RunQueryRow(query).Scan(&response)
 }
 
 func parseOperator(op DBOperator) (string, error) {
