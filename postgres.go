@@ -94,6 +94,7 @@ func (db *PgClient) RunQueryArgs(query string, args ...interface{}) (*pgx.Rows, 
 	return &rows, err
 }
 
-func (db *PgClient) RunQueryRow(query string) pgx.Row {
-	return db.poolCnx.QueryRow(db.ctx, query)
+func (db *PgClient) RunQueryRow(query string) *pgx.Row {
+	row := db.poolCnx.QueryRow(db.ctx, query)
+	return &row
 }
