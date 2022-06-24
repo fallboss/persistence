@@ -85,7 +85,9 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response inte
 	if err != nil {
 		return err
 	}
-	response, err = (*row).Values()
+	for (*row).Next() {
+		response, err = (*row).Values()
+	}
 	return err
 }
 
