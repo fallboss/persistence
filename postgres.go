@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -17,11 +16,13 @@ const ulrConnectionString = "postgresql://%s:%s@%s:%s/%s?sslmode=%s"
 func GetPostgresClient(ctx context.Context, pgProp *PostgresProp) *PgClient {
 	verifyPgProp(pgProp)
 
-	urlCnx := fmt.Sprintf(
-		ulrConnectionString, url.QueryEscape(pgProp.DbUser), url.QueryEscape(pgProp.DbPassword),
-		url.QueryEscape(pgProp.DbHost), url.QueryEscape(pgProp.DbPort), url.QueryEscape(pgProp.DbName),
-		url.QueryEscape(pgProp.DbSslMode),
-	)
+	urlCnx := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=%s ", pgProp.DbUser, pgProp.DbPassword, pgProp.DbHost, pgProp.DbPort, pgProp.DbName, pgProp.DbSslMode)
+
+	//urlCnx := fmt.Sprintf(
+	//	ulrConnectionString, url.QueryEscape(pgProp.DbUser), url.QueryEscape(pgProp.DbPassword),
+	//	url.QueryEscape(pgProp.DbHost), url.QueryEscape(pgProp.DbPort), url.QueryEscape(pgProp.DbName),
+	//	url.QueryEscape(pgProp.DbSslMode),
+	//)
 
 	cnxCfg, err := pgxpool.ParseConfig(urlCnx)
 	cnxCfg.ConnConfig.RuntimeParams["timezone"] = formatter.GetTimeZone(pgProp.Country)

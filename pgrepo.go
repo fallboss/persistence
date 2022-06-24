@@ -34,7 +34,10 @@ func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, con
 }
 
 func (r *pgRepo) ExecuteQuery(query string, response interface{}) error {
-	row := r.cnt.RunQueryRow(query)
+	row, err := r.cnt.RunQueryRows(query)
+	if err != nil {
+		return err
+	}
 	return (*row).Scan(&response)
 }
 
@@ -77,10 +80,7 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response bool
 		return err
 	}
 	var query = fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM %s WHERE %s %s '%s')", tableName, condition.FieldName, op, condition.Value)
-	row, err := r.cnt.RunQueryRows(query)
-	if err != nil {
-		return err
-	}
+	row := r.cnt.RunQueryRow(query)
 	return (*row).Scan(&response)
 }
 
@@ -120,10 +120,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s %s", condition.FieldName, op, condition.Value)
 	}
 	var query = fmt.Sprintf("UPDATE %s SET %s WHERE %s ", tableName, columnQuery, conditionsQuery)
-	row, err := r.cnt.RunQueryRows(query)
-	if err != nil {
-		return err
-	}
+	row := r.cnt.RunQueryRow(query)
 	return (*row).Scan(&response)
 }
 
