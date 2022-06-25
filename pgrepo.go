@@ -2,7 +2,10 @@ package persistence
 
 import (
 	"fmt"
+	"github.com/fallboss/persistence/formatter"
+	"github.com/georgysavva/scany/pgxscan"
 	"strings"
+	"time"
 )
 
 func GetPgRepo(cnt *PgClient) DBQuery {
@@ -12,6 +15,8 @@ func GetPgRepo(cnt *PgClient) DBQuery {
 type pgRepo struct {
 	cnt *PgClient
 }
+
+const queryExists = "SELECT EXISTS (SELECT 1 FROM %s WHERE %s %s '%v')"
 
 func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response interface{}) error {
 	var conditionsQuery = ""
@@ -23,7 +28,7 @@ func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, con
 		if err != nil {
 			return err
 		}
-		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%s')", condition.FieldName, op, condition.Value)
+		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%v')", condition.FieldName, op, condition.Value)
 	}
 	var query = fmt.Sprintf("SELECT %s FROM %s WHERE %s", strings.Join(columns, ","), tableName, conditionsQuery)
 	row, err := r.cnt.RunQueryRows(query)
@@ -38,7 +43,7 @@ func (r *pgRepo) ExecuteQuery(query string, response interface{}) error {
 	if err != nil {
 		return err
 	}
-	return (*row).Scan(&response)
+	return pgxscan.ScanOne(response, *row)
 }
 
 func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response interface{}) error {
@@ -46,12 +51,12 @@ func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response int
 	if err != nil {
 		return err
 	}
-	var query = fmt.Sprintf("SELECT * FROM %s WHERE %s %s '%s'", tableName, condition.FieldName, op, condition.Value)
+	var query = fmt.Sprintf("SELECT * FROM %s WHERE %s %s '%v'", tableName, condition.FieldName, op, condition.Value)
 	row, err := r.cnt.RunQueryRows(query)
 	if err != nil {
 		return err
 	}
-	return (*row).Scan(&response)
+	return pgxscan.ScanOne(response, *row)
 }
 
 func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, response interface{}) error {
@@ -64,48 +69,50 @@ func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, re
 		if err != nil {
 			return err
 		}
-		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%s')", condition.FieldName, op, condition.Value)
+		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%v')", condition.FieldName, op, condition.Value)
 	}
 	var query = fmt.Sprintf("SELECT * FROM %s WHERE %s", tableName, conditionsQuery)
 	row, err := r.cnt.RunQueryRows(query)
 	if err != nil {
 		return err
 	}
-	return (*row).Scan(&response)
+	return pgxscan.ScanOne(response, *row)
 }
 
-func (r *pgRepo) ExistsBy(tableName string, condition DBCondition, response interface{}) error {
+func (r *pgRepo) ExistsBy(tableName string, condition DBCondition) (bool, error) {
 	op, err := parseOperator(condition.Operator)
 	if err != nil {
-		return err
+		return false, err
 	}
-	var query = fmt.Sprintf("SELECT 1 CANT FROM %s WHERE %s %s '%s'", tableName, condition.FieldName, op, condition.Value)
-	//query = fmt.Sprintf("SELECT exists (%s)", query)
-	row, err := r.cnt.RunQueryRows(query)
+	var query = fmt.Sprintf(queryExists, tableName, condition.FieldName, op, condition.Value)
+	rows, err := r.cnt.RunQueryRows(query)
 	if err != nil {
-		return err
+		return false, err
 	}
-	for (*row).Next() {
-		response, err = (*row).Values()
-		return err
-	}
-	return err
+	var exists = struct {
+		Exists bool
+	}{}
+	err = pgxscan.ScanOne(&exists, *rows)
+	return exists.Exists, err
 }
 
 func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response interface{}) error {
 	var columnNames []string
-	var values []interface{}
+	var values []string
 	for _, column := range columnValues {
 		columnNames = append(columnNames, column.FieldName)
-		values = append(values, column.Value)
+		if value, ok := column.Value.(time.Time); ok {
+			values = append(values, fmt.Sprintf("'%v'", value.UTC().Format(formatter.ParseFormatUtc)))
+		} else {
+			values = append(values, fmt.Sprintf("'%v'", column.Value))
+		}
 	}
-	var query = fmt.Sprintf("INSERT INTO %s (%s) VALUES", tableName, strings.Join(columnNames, ","))
-	//var queryValues = query + " (%s) RETURNING *"
-	row, err := r.cnt.RunQueryArgs(query, values)
+	var query = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING * ", tableName, strings.Join(columnNames, ","), strings.Join(values, ","))
+	row, err := r.cnt.RunQueryRows(query)
 	if err != nil {
 		return err
 	}
-	return (*row).Scan(&response)
+	return pgxscan.ScanOne(response, *row)
 }
 
 func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition, response interface{}) error {
@@ -114,7 +121,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		if !strings.EqualFold(columnQuery, "") {
 			columnQuery = columnQuery + " , "
 		}
-		columnQuery = columnQuery + fmt.Sprintf("%s = %s", column.FieldName, column.Value)
+		columnQuery = columnQuery + fmt.Sprintf("%s = %v", column.FieldName, column.Value)
 	}
 	var conditionsQuery = ""
 	for _, condition := range conditions {
@@ -125,11 +132,14 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		if err != nil {
 			return err
 		}
-		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s %s", condition.FieldName, op, condition.Value)
+		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s %v", condition.FieldName, op, condition.Value)
 	}
 	var query = fmt.Sprintf("UPDATE %s SET %s WHERE %s ", tableName, columnQuery, conditionsQuery)
-	row := r.cnt.RunQueryRow(query)
-	return (*row).Scan(&response)
+	row, err := r.cnt.RunQueryRows(query)
+	if err != nil {
+		return err
+	}
+	return pgxscan.ScanOne(response, *row)
 }
 
 func parseOperator(op DBOperator) (string, error) {

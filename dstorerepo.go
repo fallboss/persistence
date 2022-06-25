@@ -14,7 +14,7 @@ func (r *datastoreRepo) FindColumnsByConditions(tableName string, columns []stri
 	panic("implement me")
 }
 
-func (r *datastoreRepo) ExistsBy(tableName string, condition DBCondition, response interface{}) error {
+func (r *datastoreRepo) ExistsBy(tableName string, condition DBCondition) (bool, error) {
 	panic("implement me")
 }
 
