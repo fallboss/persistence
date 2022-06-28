@@ -57,7 +57,7 @@ func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response int
 	if err != nil {
 		return err
 	}
-	return pgxscan.ScanRow(&response, *rows)
+	return pgxscan.ScanRow(response, *rows)
 }
 
 func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, response interface{}) error {
