@@ -139,7 +139,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		}
 		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s '%v'", condition.FieldName, op, condition.Value)
 	}
-	var query = fmt.Sprintf("UPDATE %s SET %s WHERE %s ", tableName, columnQuery, conditionsQuery)
+	var query = fmt.Sprintf("UPDATE %s SET %s WHERE %s RETURNING *", tableName, columnQuery, conditionsQuery)
 	row, err := r.cnt.RunQueryRows(query)
 	if err != nil {
 		return err
