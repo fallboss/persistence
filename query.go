@@ -7,7 +7,7 @@ type DBQuery interface {
 	FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response interface{}) error
 	ExistsBy(tableName string, condition DBCondition) (bool, error)
 	InsertInto(tableName string, columnValues []DBValue, response interface{}) error
-	Update(tableName string, columnValues []DBValue, conditions []DBCondition, response interface{}) error
+	Update(tableName string, columnValues []DBValue, conditions []DBCondition) error
 }
 
 type DBCondition struct {

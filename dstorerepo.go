@@ -18,7 +18,7 @@ func (r *datastoreRepo) ExistsBy(tableName string, condition DBCondition) (bool,
 	panic("implement me")
 }
 
-func (r *datastoreRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition, response interface{}) error {
+func (r *datastoreRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition) error {
 	panic("implement me")
 }
 
