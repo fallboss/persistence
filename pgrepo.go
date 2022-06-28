@@ -121,7 +121,12 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		if !strings.EqualFold(columnQuery, "") {
 			columnQuery = columnQuery + " , "
 		}
-		columnQuery = columnQuery + fmt.Sprintf("%s = %v", column.FieldName, column.Value)
+		if value, ok := column.Value.(time.Time); ok {
+			date := value.UTC().Format(formatter.ParseFormatUtc)
+			columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, date)
+		} else {
+			columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, column.Value)
+		}
 	}
 	var conditionsQuery = ""
 	for _, condition := range conditions {
