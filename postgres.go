@@ -84,12 +84,12 @@ type PgClient struct {
 	poolCnx *pgxpool.Pool
 }
 
-func (db *PgClient) RunQueryRows(query string) (*pgx.Rows, error) {
+func (db *PgClient) RunQueryRows(query string) (pgx.Rows, error) {
 	rows, err := db.poolCnx.Query(db.ctx, query)
 	if err != nil {
 		log.Printf("Error running query (%s): %v\n", query, err)
 	}
-	return &rows, err
+	return rows, err
 }
 func (db *PgClient) RunQueryArgs(query string, args ...interface{}) (*pgx.Rows, error) {
 	rows, err := db.poolCnx.Query(db.ctx, query, args)

@@ -36,7 +36,7 @@ func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, con
 	if err != nil {
 		return err
 	}
-	return pgxscan.ScanRow(response, *rows)
+	return pgxscan.ScanAll(response, rows)
 }
 
 func (r *pgRepo) ExecuteQuery(query string, response interface{}) error {
@@ -44,7 +44,7 @@ func (r *pgRepo) ExecuteQuery(query string, response interface{}) error {
 	if err != nil {
 		return err
 	}
-	return pgxscan.ScanRow(response, *rows)
+	return pgxscan.ScanAll(response, rows)
 }
 
 func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response interface{}) error {
@@ -57,7 +57,7 @@ func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response int
 	if err != nil {
 		return err
 	}
-	return pgxscan.ScanRow(response, *rows)
+	return pgxscan.ScanAll(response, rows)
 }
 
 func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, response interface{}) error {
@@ -77,7 +77,7 @@ func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, re
 	if err != nil {
 		return err
 	}
-	return pgxscan.ScanRow(response, *rows)
+	return pgxscan.ScanAll(response, rows)
 }
 
 func (r *pgRepo) ExistsBy(tableName string, condition DBCondition) (bool, error) {
@@ -93,11 +93,11 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition) (bool, error)
 	var exists = struct {
 		Exists bool
 	}{}
-	err = pgxscan.ScanOne(&exists, *rows)
+	err = pgxscan.ScanOne(&exists, rows)
 	return exists.Exists, err
 }
 
-func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response interface{}) error {
+func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 	var columnNames []string
 	var values []string
 	for _, column := range columnValues {
@@ -113,11 +113,8 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue, response i
 	}
 	var columns = strings.Join(columnNames, ",")
 	var query = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) ", tableName, columns, strings.Join(values, ","))
-	rows, err := r.cnt.RunQueryRows(query)
-	if err != nil {
-		return err
-	}
-	return pgxscan.ScanOne(response, *rows)
+	_, err := r.cnt.RunQueryRows(query)
+	return err
 }
 
 func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition) error {

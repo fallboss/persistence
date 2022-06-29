@@ -1,12 +1,16 @@
 package persistence
 
 type DBQuery interface {
+	//ExecuteQuery response Param must be a pointer to Slice of struct
 	ExecuteQuery(query string, response interface{}) error
+	//FindAllBy response Param must be a pointer to Slice of struct
 	FindAllBy(tableName string, condition DBCondition, response interface{}) error
+	//FindByConditions response Param must be a pointer to Slice of struct
 	FindByConditions(tableName string, conditions []DBCondition, response interface{}) error
+	//FindColumnsByConditions response Param must be a pointer to Slice of struct
 	FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response interface{}) error
 	ExistsBy(tableName string, condition DBCondition) (bool, error)
-	InsertInto(tableName string, columnValues []DBValue, response interface{}) error
+	InsertInto(tableName string, columnValues []DBValue) error
 	Update(tableName string, columnValues []DBValue, conditions []DBCondition) error
 }
 
