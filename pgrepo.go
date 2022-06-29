@@ -105,8 +105,8 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 		if value, ok := column.Value.(time.Time); ok {
 			values = append(values, fmt.Sprintf("'%v'", value.UTC().Format(formatter.ParseFormatUtc)))
 		} else {
-			if column.Value == nil {
-				values = append(values, fmt.Sprintf("%v", nil))
+			if reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil() {
+				values = append(values, "NULL")
 			}
 			values = append(values, fmt.Sprintf("'%v'", column.Value))
 		}
