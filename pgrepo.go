@@ -105,7 +105,7 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 		if value, ok := column.Value.(time.Time); ok {
 			values = append(values, fmt.Sprintf("'%v'", value.UTC().Format(formatter.ParseFormatUtc)))
 		} else {
-			if reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil() {
+			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {
 				values = append(values, "NULL")
 			}
 			values = append(values, fmt.Sprintf("'%v'", column.Value))
@@ -128,7 +128,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 			date := value.UTC().Format(formatter.ParseFormatUtc)
 			columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, date)
 		} else {
-			if reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil() {
+			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {
 				columnQuery = columnQuery + fmt.Sprintf("%s = NULL", column.FieldName)
 			} else {
 				columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, column.Value)
