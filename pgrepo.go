@@ -145,7 +145,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		if err != nil {
 			return err
 		}
-		if reflect.ValueOf(condition.Value).Kind() == reflect.Ptr && reflect.ValueOf(condition.Value).IsNil() {
+		if condition.Value == nil || (reflect.ValueOf(condition.Value).Kind() == reflect.Ptr && reflect.ValueOf(condition.Value).IsNil()) {
 			conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s NULL", condition.FieldName, op)
 		}
 		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s '%v'", condition.FieldName, op, condition.Value)
