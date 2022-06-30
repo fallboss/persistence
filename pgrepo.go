@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"fmt"
-	"github.com/fallboss/persistence/formatter"
 	"github.com/georgysavva/scany/pgxscan"
 	"reflect"
 	"strings"
@@ -103,7 +102,7 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 	for _, column := range columnValues {
 		columnNames = append(columnNames, column.FieldName)
 		if value, ok := column.Value.(time.Time); ok {
-			values = append(values, fmt.Sprintf("'%v'", value.UTC().Format(formatter.ParseFormatUtc)))
+			values = append(values, fmt.Sprintf("'%v'", value.UTC().Format(ParseFormatUtc)))
 		} else {
 			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {
 				values = append(values, "NULL")
@@ -125,7 +124,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 			columnQuery = columnQuery + " , "
 		}
 		if value, ok := column.Value.(time.Time); ok {
-			date := value.UTC().Format(formatter.ParseFormatUtc)
+			date := value.UTC().Format(ParseFormatUtc)
 			columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, date)
 		} else {
 			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {

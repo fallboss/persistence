@@ -1,4 +1,4 @@
-package formatter
+package persistence
 
 const TimeZoneSantiago = "America/Santiago"
 const TimeZoneArgentinaBuenosAires = "America/Argentina/Buenos_Aires"
