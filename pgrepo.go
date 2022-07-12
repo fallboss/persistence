@@ -113,7 +113,8 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 	}
 	var columns = strings.Join(columnNames, ",")
 	var query = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) ", tableName, columns, strings.Join(values, ","))
-	_, err := r.cnt.RunQueryRows(query)
+	rows, err := r.cnt.RunQueryRows(query)
+	rows.Close()
 	return err
 }
 
