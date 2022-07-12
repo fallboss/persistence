@@ -106,8 +106,9 @@ func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 		} else {
 			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {
 				values = append(values, "NULL")
+			} else {
+				values = append(values, fmt.Sprintf("'%v'", column.Value))
 			}
-			values = append(values, fmt.Sprintf("'%v'", column.Value))
 		}
 	}
 	var columns = strings.Join(columnNames, ",")
