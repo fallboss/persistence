@@ -124,17 +124,16 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 	var columnQuery = ""
 	var args []interface{}
 	index := 0
-	for i, column := range columnValues {
+	for _, column := range columnValues {
 		if !strings.EqualFold(columnQuery, "") {
 			columnQuery = columnQuery + " , "
 		}
-		index = i + 1
+		index = index + 1
 		columnQuery = columnQuery + fmt.Sprintf("%s = $%d", column.FieldName, index)
 		args = append(args, column.Value)
 	}
 	var conditionsQuery = ""
-	for j, condition := range conditions {
-		index = j + index + 1
+	for _, condition := range conditions {
 		if !strings.EqualFold(conditionsQuery, "") {
 			conditionsQuery = conditionsQuery + " AND "
 		}
@@ -147,6 +146,7 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		} else if condition.Value == nil || (reflect.ValueOf(condition.Value).Kind() == reflect.Ptr && reflect.ValueOf(condition.Value).IsNil()) {
 			conditionsQuery = conditionsQuery + fmt.Sprintf("%s IS NULL", condition.FieldName)
 		} else {
+			index = index + 1
 			conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s $%d", condition.FieldName, op, index)
 			args = append(args, condition.Value)
 		}
