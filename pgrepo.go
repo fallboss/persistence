@@ -5,7 +5,6 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 	"reflect"
 	"strings"
-	"time"
 )
 
 func GetPgRepo(cnt *PgClient) DBQuery {
@@ -16,11 +15,13 @@ type pgRepo struct {
 	cnt *PgClient
 }
 
-const queryExists = "SELECT EXISTS (SELECT 1 FROM %s WHERE %s %s '%v')"
+const queryExists = "SELECT EXISTS (SELECT 1 FROM %s WHERE %s %s $1)"
 
 func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, conditions []DBCondition, response interface{}) error {
 	var conditionsQuery = ""
-	for _, condition := range conditions {
+
+	var args []interface{}
+	for i, condition := range conditions {
 		if !strings.EqualFold(conditionsQuery, "") {
 			conditionsQuery = conditionsQuery + " AND "
 		}
@@ -28,10 +29,12 @@ func (r *pgRepo) FindColumnsByConditions(tableName string, columns []string, con
 		if err != nil {
 			return err
 		}
-		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%v')", condition.FieldName, op, condition.Value)
+		values := fmt.Sprintf("$%d", i+1)
+		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s %s", condition.FieldName, op, values)
+		args = append(args, condition.Value)
 	}
 	var query = fmt.Sprintf("SELECT %s FROM %s WHERE %s", strings.Join(columns, ","), tableName, conditionsQuery)
-	rows, err := r.cnt.RunQueryRows(query)
+	rows, err := r.cnt.RunQueryArgs(query, args)
 	if err != nil {
 		return err
 	}
@@ -51,8 +54,9 @@ func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response int
 	if err != nil {
 		return err
 	}
-	var query = fmt.Sprintf("SELECT * FROM %s WHERE %s %s '%v'", tableName, condition.FieldName, op, condition.Value)
-	rows, err := r.cnt.RunQueryRows(query)
+	var query = fmt.Sprintf("SELECT * FROM %s WHERE %s %s $1", tableName, condition.FieldName, op)
+	args := []interface{}{condition.Value}
+	rows, err := r.cnt.RunQueryArgs(query, args)
 	if err != nil {
 		return err
 	}
@@ -61,7 +65,8 @@ func (r *pgRepo) FindAllBy(tableName string, condition DBCondition, response int
 
 func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, response interface{}) error {
 	var conditionsQuery = ""
-	for _, condition := range conditions {
+	var args []interface{}
+	for i, condition := range conditions {
 		if !strings.EqualFold(conditionsQuery, "") {
 			conditionsQuery = conditionsQuery + " AND "
 		}
@@ -69,10 +74,12 @@ func (r *pgRepo) FindByConditions(tableName string, conditions []DBCondition, re
 		if err != nil {
 			return err
 		}
-		conditionsQuery = conditionsQuery + fmt.Sprintf("(%s %s '%v')", condition.FieldName, op, condition.Value)
+		value := fmt.Sprintf("$%d", i+1)
+		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s %s", condition.FieldName, op, value)
+		args = append(args, condition.Value)
 	}
 	var query = fmt.Sprintf("SELECT * FROM %s WHERE %s", tableName, conditionsQuery)
-	rows, err := r.cnt.RunQueryRows(query)
+	rows, err := r.cnt.RunQueryArgs(query, args)
 	if err != nil {
 		return err
 	}
@@ -84,8 +91,9 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition) (bool, error)
 	if err != nil {
 		return false, err
 	}
-	var query = fmt.Sprintf(queryExists, tableName, condition.FieldName, op, condition.Value)
-	rows, err := r.cnt.RunQueryRows(query)
+	var query = fmt.Sprintf(queryExists, tableName, condition.FieldName, op)
+	args := []interface{}{condition.Value}
+	rows, err := r.cnt.RunQueryArgs(query, args)
 	if err != nil {
 		return false, err
 	}
@@ -99,46 +107,34 @@ func (r *pgRepo) ExistsBy(tableName string, condition DBCondition) (bool, error)
 func (r *pgRepo) InsertInto(tableName string, columnValues []DBValue) error {
 	var columnNames []string
 	var values []string
-	for _, column := range columnValues {
+	var args []interface{}
+	for i, column := range columnValues {
 		columnNames = append(columnNames, column.FieldName)
-		if value, ok := column.Value.(time.Time); ok {
-			values = append(values, fmt.Sprintf("'%v'", value.UTC().Format(ParseFormatUtc)))
-		} else {
-			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {
-				values = append(values, "NULL")
-			} else {
-				values = append(values, fmt.Sprintf("'%v'", column.Value))
-			}
-		}
+		values = append(values, fmt.Sprintf("$%d", i+1))
+		args = append(args, column.Value)
 	}
 	var columns = strings.Join(columnNames, ",")
 	var query = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) ", tableName, columns, strings.Join(values, ","))
-	rows, err := r.cnt.RunQueryRows(query)
+	rows, err := r.cnt.RunQueryArgs(query, args)
 	rows.Close()
 	return err
 }
 
 func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []DBCondition) error {
 	var columnQuery = ""
-	var columnNames []string
-	for _, column := range columnValues {
+	var args []interface{}
+	index := 0
+	for i, column := range columnValues {
 		if !strings.EqualFold(columnQuery, "") {
 			columnQuery = columnQuery + " , "
 		}
-		if value, ok := column.Value.(time.Time); ok {
-			date := value.UTC().Format(ParseFormatUtc)
-			columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, date)
-		} else {
-			if column.Value == nil || (reflect.ValueOf(column.Value).Kind() == reflect.Ptr && reflect.ValueOf(column.Value).IsNil()) {
-				columnQuery = columnQuery + fmt.Sprintf("%s = NULL", column.FieldName)
-			} else {
-				columnQuery = columnQuery + fmt.Sprintf("%s = '%v'", column.FieldName, column.Value)
-			}
-		}
-		columnNames = append(columnNames, column.FieldName)
+		index = i + 1
+		columnQuery = columnQuery + fmt.Sprintf("%s = $%d", column.FieldName, index)
+		args = append(args, column.Value)
 	}
 	var conditionsQuery = ""
-	for _, condition := range conditions {
+	for j, condition := range conditions {
+		index = j + index + 1
 		if !strings.EqualFold(conditionsQuery, "") {
 			conditionsQuery = conditionsQuery + " AND "
 		}
@@ -146,14 +142,17 @@ func (r *pgRepo) Update(tableName string, columnValues []DBValue, conditions []D
 		if err != nil {
 			return err
 		}
-		if condition.Value == nil || (reflect.ValueOf(condition.Value).Kind() == reflect.Ptr && reflect.ValueOf(condition.Value).IsNil()) {
-			conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s NULL", condition.FieldName, op)
+		if condition.Operator == ISNULL || condition.Operator == ISNOTNULL {
+			conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s", condition.FieldName, op)
+		} else if condition.Value == nil || (reflect.ValueOf(condition.Value).Kind() == reflect.Ptr && reflect.ValueOf(condition.Value).IsNil()) {
+			conditionsQuery = conditionsQuery + fmt.Sprintf("%s IS NULL", condition.FieldName)
+		} else {
+			conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s $%d", condition.FieldName, op, index)
+			args = append(args, condition.Value)
 		}
-		conditionsQuery = conditionsQuery + fmt.Sprintf("%s %s '%v'", condition.FieldName, op, condition.Value)
 	}
-
 	var query = fmt.Sprintf("UPDATE %s SET %s WHERE %s", tableName, columnQuery, conditionsQuery)
-	rows, err := r.cnt.RunQueryRows(query)
+	rows, err := r.cnt.RunQueryArgs(query, args)
 	rows.Close()
 	return err
 }
