@@ -90,6 +90,7 @@ func (db *PgClient) RunQueryRows(query string) (pgx.Rows, error) {
 	}
 	return rows, err
 }
+
 func (db *PgClient) RunQueryArgs(query string, args []interface{}) (pgx.Rows, error) {
 	rows, err := db.poolCnx.Query(db.ctx, query, args...)
 	if err != nil {
